@@ -46,7 +46,7 @@ SELECT t.number_room as "room",
     a.password_user as "password"
 FROM  telephon t
 LEFT JOIN users u ON t.number_room = u.apartment_number
-INNER JOIN accesses a ON t.number_room = a.number_room
+LEFT JOIN accesses a ON t.number_room = a.number_room
 WHERE t.number_room = {0}
 '''
 

@@ -99,7 +99,8 @@ def bot_messag(message):
                 log_info.info(f'Пользователь {message.from_user.id} {message.from_user.username} запросил информацию о предоставлении доступа')
                 bot.send_message(message.chat.id, 'Для получения доступа к системе видеонаблюдения Вам необходимо написать заявление '
                                                   'на предоставление доступа и передать его Дмитрию либо положить в 71 почтовый ящик '
-                                                  '(наилучший выбор). \nОповестить Дмитрия в телеграмм.')
+                                                  '(наилучший выбор). \nОповестить Дмитрия в телеграмм.\n\n'
+                                                  'При наличии email адреса укажите в его в заявлении.')
                 markup = types.InlineKeyboardMarkup()
                 switch_button_1 = types.InlineKeyboardButton(text='Перейти в чат',
                                                              url='https://t.me/DoK2412')
