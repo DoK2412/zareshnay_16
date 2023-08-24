@@ -13,7 +13,7 @@ import emoji
 
 
 import queries_database as qd
-from sqlmodel import SQLModel, Session, select
+from sqlmodel import Session
 import sqlbase as cbd
 
 
