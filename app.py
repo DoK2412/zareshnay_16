@@ -795,4 +795,5 @@ def  update_owners(message):
         bot.send_message(message.from_user.id,
                          'Собственник изменен в базе данных')
 
-bot.polling(none_stop=True, interval=0)
+if __name__ == '__main__':
+    bot.polling(none_stop=True, interval=0)
