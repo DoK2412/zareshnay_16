@@ -25,7 +25,7 @@ SELECT id FROM users WHERE apartment_number = {0}
 
 USER_ACCESS_DB = '''
 -- получение id пользователя в базе данных
-SELECT date_issue 
+SELECT users.date_issue 
 FROM users 
 INNER JOIN accesses a ON users.apartment_number = a.number_room
 WHERE user_id_telega = {0} and owner = True
@@ -73,7 +73,7 @@ INSERT INTO accesses (number_room, ip_address, login_user, password_user, date_r
 
 UPDATE_USER = '''
 --подтверждение переадчи данных собственнику
-UPDATE accesses SET date_issue = {1} WHERE number_room = {0}
+UPDATE accesses SET date_issue = true WHERE number_room = {0}
 '''
 
 ADD_PHONE = '''
@@ -113,4 +113,20 @@ UPDATE users SET user_type = {1} WHERE apartment_number = {0}
 FULFILLED = '''
 -- запрос закрытия архивной заявки
 UPDATE video_request SET reply_date = {2}, name_video = {1} WHERE id = {0}
+'''
+
+
+GET_OWNER = '''
+--получение данных о собственнике
+SELECT * FROM all_owners WHERE room = {0}
+'''
+
+ADD_OWNER = '''
+--добавить собственника
+INSERT INTO all_owners (name, l_name, f_name, room, number) VALUES ({0}, {1}, {2}, {3}, {4})
+'''
+
+UPDATE_OWNER = '''
+--Ообновить собственника
+UPDATE all_owners SET name={0}, l_name={1}, f_name={2}, number={4} WHERE room={3}
 '''

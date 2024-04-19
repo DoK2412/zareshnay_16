@@ -8,6 +8,8 @@ import logging.config  # подключение файла конфигурац�
 from logger import logger_config  # импорт логгера
 
 from telegram_bot_calendar import DetailedTelegramCalendar
+from pydantic import BaseModel
+from typing import Optional
 
 import emoji
 
@@ -60,8 +62,10 @@ def startBotWorck(message):
                     buttom5 = types.KeyboardButton(emoji.emojize('\U0001F4D6 Запрос сведений о собственнике'))
                     buttom6 = types.KeyboardButton(emoji.emojize('\U0001F4F2 Запрос сведений о запросах архива'))
                     buttom7 = types.KeyboardButton(emoji.emojize('\U0001F4DD Добавить в базу'))
+                    buttom8 = types.KeyboardButton(emoji.emojize('\U0001F4DD Собственники'))
+
                     markup.add(buttom1, buttom2, buttom3, buttom4, buttom5)
-                    markup.add(buttom6, buttom7)
+                    markup.add(buttom6, buttom7, buttom8)
 
                     bot.send_message(message.chat.id,
                                      emoji.emojize(f'Доброго времени суток {message.from_user.first_name}. \U0001F44B  '
@@ -146,14 +150,29 @@ def bot_messag(message):
                 switch_button_5 = types.InlineKeyboardButton(text='Смена прав доступа', callback_data='Смена')
                 switch_button_6 = types.InlineKeyboardButton(text='Закрыть запрос архива', callback_data='Исполнение')
 
-
-
                 markup.add(switch_button_1)
                 markup.add(switch_button_2)
                 markup.add(switch_button_3)
                 markup.add(switch_button_4)
                 markup.add(switch_button_5)
                 markup.add(switch_button_6)
+
+                bot.send_message(message.chat.id, "Укажите команду", reply_markup=markup)
+
+
+            elif message.text == '\U0001F4DD Собственники':
+                markup = types.InlineKeyboardMarkup()
+                switch_button_1 = types.InlineKeyboardButton(text='Проверить собственника',
+                                                             callback_data='Проверить собственника')
+                switch_button_2 = types.InlineKeyboardButton(text='Добавить собственника',
+                                                             callback_data='Добавить собственника')
+                switch_button_3 = types.InlineKeyboardButton(text='Заменить собственника',
+                                                             callback_data='Заменить собственника')
+
+                markup.add(switch_button_1)
+                markup.add(switch_button_2)
+                markup.add(switch_button_3)
+
 
 
 
@@ -676,6 +695,7 @@ def out_post(message):
     bot.send_message(message.from_user.id, 'Введите название переданного видео.')
     bot.register_next_step_handler(message, name_video)
 
+
 def name_video(message):
     user = user_data.Users.get_user(message.from_user.id,
                                     message.from_user.first_name,
@@ -690,5 +710,85 @@ def name_video(message):
     bot.send_message(message.from_user.id, f'Заявке #{user.id_archive} присвоен статус "исполнена".')
 
 
+@bot.callback_query_handler(func=lambda call: call.data in ['Проверить собственника'])
+def check_owner(message):
+    user = user_data.Users.get_user(message.from_user.id,
+                                    message.from_user.first_name,
+                                    message.from_user.last_name,
+                                    message.from_user.username)
+
+    bot.send_message(message.from_user.id, 'Введите № квартиры')
+    bot.register_next_step_handler(message.message, get_owner_data)
+
+
+def get_owner_data(message):
+    user = user_data.Users.get_user(message.from_user.id,
+                                    message.from_user.first_name,
+                                    message.from_user.last_name,
+                                    message.from_user.username)
+
+    class Owner(BaseModel):
+        id: int
+        name: Optional[str]
+        l_name: Optional[str]
+        f_name: Optional[str]
+        room: Optional[int]
+        number: Optional[str]
+
+
+    room = message.text
+
+    with Session(cbd.engin) as session:
+        room_id = session.execute(qd.GET_OWNER.format(int(room))).all()
+        if room_id:
+            owner = Owner(**room_id[0])
+            bot.send_message(message.from_user.id, f'Квартира № {owner.room},\nФамилия: {owner.l_name},\nИмя: {owner.name}, \nОтчество: {owner.f_name}, \nНомер телефона: {owner.number}')
+        else:
+            bot.send_message(message.from_user.id, 'Собственник не найден в базе данных.')
+
+
+@bot.callback_query_handler(func=lambda call: call.data in ['Добавить собственника'])
+def add_owner(message):
+    user = user_data.Users.get_user(message.from_user.id,
+                                    message.from_user.first_name,
+                                    message.from_user.last_name,
+                                    message.from_user.username)
+
+    bot.send_message(message.from_user.id, 'Введите данные собственника.\n Образец: Фамилия Имя Отчество № квартиры № телефона\n без знаков припинания через пробел ')
+    bot.register_next_step_handler(message.message, add_owners_in_all)
+
+
+def add_owners_in_all(message):
+    user = user_data.Users.get_user(message.from_user.id,
+                                    message.from_user.first_name,
+                                    message.from_user.last_name,
+                                    message.from_user.username)
+
+    owner = message.text.split(' ')
+    with Session(cbd.engin) as session:
+        session.execute(qd.ADD_OWNER.format(f"'{owner[1]}'", f"'{owner[0]}'", f"'{owner[2]}'", f"'{int(owner[3])}'", f"'{owner[4]}'",))
+        session.commit()
+        bot.send_message(message.from_user.id,
+                         'Собственник добавлен в базе данных')
+
+
+@bot.callback_query_handler(func=lambda call: call.data in ['Заменить собственника'])
+def update_owner(message):
+    user = user_data.Users.get_user(message.from_user.id,
+                                    message.from_user.first_name,
+                                    message.from_user.last_name,
+                                    message.from_user.username)
+
+    bot.send_message(message.from_user.id, 'Введите данные собственника.\n Образец: Фамилия Имя Отчество № квартиры № телефона\n без знаков припинания через пробел ')
+    bot.register_next_step_handler(message, update_owners)
+
+
+def  update_owners(message):
+    owner = message.text.split(' ')
+    with Session(cbd.engin) as session:
+        session.execute(qd.UPDATE_OWNER.format(f"'{owner[1]}'", f"'{owner[0]}'", f"'{owner[2]}'", f"'{int(owner[3])}'", f"'{owner[4]}'",))
+        session.commit()
+        bot.send_message(message.from_user.id,
+                         'Собственник изменен в базе данных')
 
 bot.polling(none_stop=True, interval=0)
