@@ -363,12 +363,16 @@ def access_check(message):
 
         with Session(cbd.engin) as session:
             user_id = session.execute(qd.USER_ACCESS_DB.format(f"{message.from_user.id}")).all()
-            if user_id[0][0] != None:
-                log_info.info(f'Пользователь {message.from_user.id} {message.from_user.username} проверил допуск к онлайн просмотру. Статус:  {user_id[0][0]}.')
-                bot.send_message(message.chat.id, 'Доступ предоставлен.')
+            if len(user_id) > 0:
+                if user_id[0][0] != None:
+                    log_info.info(f'Пользователь {message.from_user.id} {message.from_user.username} проверил допуск к онлайн просмотру. Статус:  {user_id[0][0]}.')
+                    bot.send_message(message.chat.id, 'Доступ предоставлен.')
+                else:
+                    log_info.info(f'Пользователь {message.from_user.id} {message.from_user.username} проверил допуск к онлайн просмотру. Статус:  {user_id[0][0]}.')
+                    bot.send_message(message.chat.id, 'Доступ не предоставлен.')
             else:
-                log_info.info(f'Пользователь {message.from_user.id} {message.from_user.username} проверил допуск к онлайн просмотру. Статус:  {user_id[0][0]}.')
                 bot.send_message(message.chat.id, 'Доступ не предоставлен.')
+
     except Exception as ex:
         bot.send_message(message.chat.id,
                          'При выполении запроса возникла ошибка.\nПопробуйде повторно произвести запрос.')
