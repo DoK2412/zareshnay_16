@@ -1,25 +1,20 @@
 """Файл предназначен для реализации класса пользователя"""
 
 
-class Users:
+class User:
     user = dict()
 
     def __init__(self, chat_id, first_name, last_name, username):
 
-        self.id_chat = chat_id         # id чата *
-        self.id_user = None
-        self.first_name = first_name               # имя пользователя *
+        self.id_chat = chat_id
+        self.first_name = first_name
         self.last_name = last_name
-        self.username = username            # фамилия пользователя *
-        self.telophone = None          # номер телефона
-        self.arrival_date = None
-        self.login = None
-        self.password = None
-        self.room = None
-        self.user_name_ad = None
-        self.first_name_ad = None
-        self.last_name_ad = None
-        self.id_archive = None
+        self.username = username
+        self.id_user = None
+        self.rights = None
+        self.date = None
+        self.apartment = None
+
 
     @classmethod
     def get_user(cls,chat_id, first_name, last_name, username):
@@ -30,5 +25,6 @@ class Users:
 
     @classmethod
     def add_user(cls, chat_id, first_name, last_name, username):
-        cls.user[chat_id] = Users(chat_id, first_name, last_name, username)
+        cls.user[chat_id] = User(chat_id, first_name, last_name, username)
         return cls.user[chat_id]
+    
