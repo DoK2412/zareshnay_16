@@ -13,9 +13,16 @@ class JobDB(object):
         self.port: int = auth.DataBase["port_db"]
         self.cursor = None
 
-
     def create(self):
         return f'postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.db_name}'
 
 
-engin = create_engine(JobDB().create())
+engin = create_engine(JobDB().create(),
+                      pool_pre_ping=True,
+                      connect_args={
+                          "keepalives": 1,
+                          "keepalives_idle": 30,
+                          "keepalives_interval": 10,
+                          "keepalives_count": 5,
+                      })
+
